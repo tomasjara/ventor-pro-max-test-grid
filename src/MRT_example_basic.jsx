@@ -335,7 +335,7 @@ export const MRT_example_basic = () => {
       grouping,
     },
     initialState: {
-      expanded: true, // Expandir grupos por defecto
+      expanded: false, // Expandir grupos por defecto
     },
     enablePagination: true,
     enableSorting: true,
