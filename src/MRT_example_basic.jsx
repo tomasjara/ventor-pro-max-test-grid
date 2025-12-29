@@ -39,9 +39,9 @@ const CONFIG = {
     },
 };
   
-const obtenerMesActual = () => {
-const mesActual = new Date().getMonth();
-return CONFIG.meses[mesActual];
+const obtenerMesAleatorio = () => {
+const indiceAleatorio = Math.floor(Math.random() * CONFIG.meses.length);
+return CONFIG.meses[indiceAleatorio];
 };
 
 const randomDecimal = (min, max, decimales = 2) => {
@@ -72,7 +72,7 @@ CONFIG.locales.forEach((local) => {
         local,
         producto,
         venta,
-        mes: obtenerMesActual(),
+        mes: obtenerMesAleatorio(),
         inventario,
         crecimiento,
     });
@@ -125,7 +125,7 @@ export const MRT_example_basic = () => {
       },
       {
         accessorKey: 'mes',
-        header: 'Mes en Curso',
+        header: 'Mes',
         size: 140,
       },
       {
