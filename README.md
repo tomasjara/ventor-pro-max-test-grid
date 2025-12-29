@@ -82,13 +82,7 @@ const CONFIG = {
 - **Mes en Curso**: Mes actual automático
 - **Inventario**: Números enteros (pueden ser negativos)
 - **Crecimiento**: Porcentajes con decimales
-
-## 🎨 Colores Condicionales
-
-- **Venta**: Verde (alta), Naranja (media), Rojo (baja)
-- **Inventario**: Azul (positivo), Naranja (negativo), Rojo (bajo)
-- **Crecimiento**: Verde (positivo), Rojo (negativo), Gris (neutro)
-
+  
 ## 📦 Dependencias Principales
 
 - **React** ^19.2.0
