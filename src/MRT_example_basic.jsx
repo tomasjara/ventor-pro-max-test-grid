@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   MaterialReactTable,
   useMaterialReactTable,
@@ -88,12 +88,16 @@ export const MRT_example_basic = () => {
   // Estado para controlar la visibilidad de columnas
   const [columnVisibility, setColumnVisibility] = useState({});
   
+  // Estado para controlar el agrupamiento (permite cambios manuales)
+  const [grouping, setGrouping] = useState([]);
+  
   // Funciones para cambiar la visibilidad de columnas
   const mostrarSoloLocales = () => {
     setColumnVisibility({
       local: true,
       producto: false,
     });
+    setGrouping(['local']); // Agrupar por local
   };
   
   const mostrarSoloProductos = () => {
@@ -101,6 +105,7 @@ export const MRT_example_basic = () => {
       local: false,
       producto: true,
     });
+    setGrouping(['producto']); // Agrupar por producto
   };
   
   const mostrarSinAgrupar = () => {
@@ -108,6 +113,7 @@ export const MRT_example_basic = () => {
       local: true,
       producto: true,
     });
+    setGrouping([]); // Limpiar agrupación
   };
   
   // Calcular estado de visibilidad
@@ -116,27 +122,67 @@ export const MRT_example_basic = () => {
   
   // Determinar qué vista está activa
   const vistaActiva = useMemo(() => {
-    if (localVisible && productoVisible) return 'sinAgrupar';
-    if (localVisible && !productoVisible) return 'soloLocales';
-    if (!localVisible && productoVisible) return 'soloProductos';
-    return 'sinAgrupar'; // Por defecto
+    // Si no hay agrupación, mostrar "Sin Agrupar"
+    if (grouping.length === 0) {
+      return 'sinAgrupar';
+    }
+    // Si está agrupado por local y solo local está visible
+    if (grouping.includes('local') && localVisible && !productoVisible) {
+      return 'soloLocales';
+    }
+    // Si está agrupado por producto y solo producto está visible
+    if (grouping.includes('producto') && !localVisible && productoVisible) {
+      return 'soloProductos';
+    }
+    // Si hay agrupación pero no coincide con los botones, mostrar "Sin Agrupar"
+    return 'sinAgrupar';
+  }, [localVisible, productoVisible, grouping]);
+  
+  // Sincronizar grouping automático cuando cambia la visibilidad desde el menú de columnas
+  // (Los botones ya establecen el grouping directamente)
+  useEffect(() => {
+    // Si solo local está visible, agrupar por local (solo si no hay agrupación manual diferente)
+    if (localVisible && !productoVisible) {
+      const tieneAgrupacionManual = grouping.length > 0 && 
+        !(grouping.length === 1 && grouping[0] === 'local');
+      if (!tieneAgrupacionManual) {
+        setGrouping(['local']);
+      }
+    }
+    // Si solo producto está visible, agrupar por producto (solo si no hay agrupación manual diferente)
+    else if (!localVisible && productoVisible) {
+      const tieneAgrupacionManual = grouping.length > 0 && 
+        !(grouping.length === 1 && grouping[0] === 'producto');
+      if (!tieneAgrupacionManual) {
+        setGrouping(['producto']);
+      }
+    }
+    // Si ambos están visibles, limpiar solo si la agrupación es automática
+    else if (localVisible && productoVisible) {
+      const esAgrupacionAutomatica = grouping.length === 1 && 
+        (grouping[0] === 'local' || grouping[0] === 'producto');
+      if (esAgrupacionAutomatica) {
+        setGrouping([]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localVisible, productoVisible]);
   
-  // Calcular grouping basado en visibilidad
-  // Si solo local está visible (producto oculto) → agrupar por local
-  // Si solo producto está visible (local oculto) → agrupar por producto
-  const grouping = useMemo(() => {
-    // Si solo local está visible, agrupar por local
-    if (localVisible && !productoVisible) {
-      return ['local'];
+  // Handler para cambios manuales de agrupación
+  const handleGroupingChange = (updater) => {
+    const nuevoGrouping = typeof updater === 'function' 
+      ? updater(grouping) 
+      : updater;
+    setGrouping(nuevoGrouping);
+    
+    // Si se quita toda la agrupación, activar "Sin Agrupar"
+    if (nuevoGrouping.length === 0) {
+      setColumnVisibility({
+        local: true,
+        producto: true,
+      });
     }
-    // Si solo producto está visible, agrupar por producto
-    if (!localVisible && productoVisible) {
-      return ['producto'];
-    }
-    // Si ambos están visibles u ocultos, no agrupar
-    return [];
-  }, [localVisible, productoVisible]);
+  };
 
   const columns = useMemo(
     () => [
@@ -283,6 +329,7 @@ export const MRT_example_basic = () => {
     enableAggregationRow: true, // Habilitar filas de agregación
     enableColumnVisibility: true,
     onColumnVisibilityChange: setColumnVisibility,
+    onGroupingChange: handleGroupingChange, // Handler para cambios manuales de agrupación
     state: {
       columnVisibility,
       grouping,
