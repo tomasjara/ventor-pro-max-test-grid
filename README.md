@@ -18,13 +18,12 @@ Proyecto de ejemplo que demuestra el uso de **Material React Table** con React y
 
 ## 🛠️ Instalación
 
-1. **Clonar el repositorio** (si aplica):
+ **Clonar el repositorio** (si aplica):
    ```bash
-   git clone <url-del-repositorio>
+   git clone https://github.com/tomasjara/ventor-pro-max-test-grid
    cd ventor-pro-max-test-grid
    ```
-
-2. **Instalar dependencias**:
+ **Instalar dependencias**:
    ```bash
    npm install
    ```
