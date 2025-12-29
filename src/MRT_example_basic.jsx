@@ -3,6 +3,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from 'material-react-table';
+import { Button, ButtonGroup, Box } from '@mui/material';
 
 
 const CONFIG = {
@@ -83,6 +84,59 @@ return datos;
 
 export const MRT_example_basic = () => {
   const [data] = useState(() => generarDatosEjemplo());
+  
+  // Estado para controlar la visibilidad de columnas
+  const [columnVisibility, setColumnVisibility] = useState({});
+  
+  // Funciones para cambiar la visibilidad de columnas
+  const mostrarSoloLocales = () => {
+    setColumnVisibility({
+      local: true,
+      producto: false,
+    });
+  };
+  
+  const mostrarSoloProductos = () => {
+    setColumnVisibility({
+      local: false,
+      producto: true,
+    });
+  };
+  
+  const mostrarSinAgrupar = () => {
+    setColumnVisibility({
+      local: true,
+      producto: true,
+    });
+  };
+  
+  // Calcular estado de visibilidad
+  const localVisible = columnVisibility['local'] !== false;
+  const productoVisible = columnVisibility['producto'] !== false;
+  
+  // Determinar qué vista está activa
+  const vistaActiva = useMemo(() => {
+    if (localVisible && productoVisible) return 'sinAgrupar';
+    if (localVisible && !productoVisible) return 'soloLocales';
+    if (!localVisible && productoVisible) return 'soloProductos';
+    return 'sinAgrupar'; // Por defecto
+  }, [localVisible, productoVisible]);
+  
+  // Calcular grouping basado en visibilidad
+  // Si solo local está visible (producto oculto) → agrupar por local
+  // Si solo producto está visible (local oculto) → agrupar por producto
+  const grouping = useMemo(() => {
+    // Si solo local está visible, agrupar por local
+    if (localVisible && !productoVisible) {
+      return ['local'];
+    }
+    // Si solo producto está visible, agrupar por producto
+    if (!localVisible && productoVisible) {
+      return ['producto'];
+    }
+    // Si ambos están visibles u ocultos, no agrupar
+    return [];
+  }, [localVisible, productoVisible]);
 
   const columns = useMemo(
     () => [
@@ -91,17 +145,33 @@ export const MRT_example_basic = () => {
         header: 'Local',
         size: 180,
         enableColumnFilter: true,
+        enableGrouping: true,
       },
       {
         accessorKey: 'producto',
         header: 'Producto',
         size: 150,
         enableColumnFilter: true,
+        enableGrouping: true,
       },
       {
         accessorKey: 'venta',
         header: 'Venta',
         size: 130,
+        aggregationFn: 'sum', // Sumar valores al agrupar
+        AggregatedCell: ({ cell }) => {
+          const valor = cell.getValue();
+          const formateado = new Intl.NumberFormat('es-ES', {
+            minimumFractionDigits: CONFIG.venta.decimales,
+            maximumFractionDigits: CONFIG.venta.decimales,
+          }).format(valor);
+          
+          return (
+            <span style={{ fontWeight: 'bold', color: '#10b981' }}>
+              Total: ${formateado}
+            </span>
+          );
+        },
         Cell: ({ cell }) => {
           const valor = cell.getValue();
           const formateado = new Intl.NumberFormat('es-ES', {
@@ -132,6 +202,17 @@ export const MRT_example_basic = () => {
         accessorKey: 'inventario',
         header: 'Inventario',
         size: 130,
+        aggregationFn: 'sum', // Sumar valores al agrupar
+        AggregatedCell: ({ cell }) => {
+          const valor = cell.getValue();
+          const formateado = new Intl.NumberFormat('es-ES').format(valor);
+          
+          return (
+            <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>
+              Total: {formateado}
+            </span>
+          );
+        },
         Cell: ({ cell }) => {
           const valor = cell.getValue();
           const formateado = new Intl.NumberFormat('es-ES').format(valor);
@@ -154,6 +235,21 @@ export const MRT_example_basic = () => {
         accessorKey: 'crecimiento',
         header: 'Crecimiento',
         size: 140,
+        aggregationFn: 'mean', // Promedio para crecimiento (más lógico que suma)
+        AggregatedCell: ({ cell }) => {
+          const valor = cell.getValue();
+          const formateado = new Intl.NumberFormat('es-ES', {
+            minimumFractionDigits: CONFIG.crecimiento.decimales,
+            maximumFractionDigits: CONFIG.crecimiento.decimales,
+            style: 'percent',
+          }).format(valor / 100);
+          
+          return (
+            <span style={{ fontWeight: 'bold', color: '#6b7280' }}>
+              Promedio: {formateado}
+            </span>
+          );
+        },
         Cell: ({ cell }) => {
           const valor = cell.getValue();
           const formateado = new Intl.NumberFormat('es-ES', {
@@ -183,8 +279,49 @@ export const MRT_example_basic = () => {
   const table = useMaterialReactTable({
     columns,
     data,
+    enableGrouping: true,
+    enableAggregationRow: true, // Habilitar filas de agregación
+    enableColumnVisibility: true,
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      columnVisibility,
+      grouping,
+    },
+    initialState: {
+      expanded: true, // Expandir grupos por defecto
+    },
+    enablePagination: true,
+    enableSorting: true,
+    enableColumnFilters: true,
+    enableGlobalFilter: true,
   });
 
-  return <MaterialReactTable table={table} />;
+  return (
+    <Box>
+      <Box sx={{ mb: 2, display: 'flex', gap: 1, justifyContent: 'flex-start' }}>
+        <ButtonGroup variant="outlined" aria-label="botones de vista">
+          <Button 
+            onClick={mostrarSinAgrupar}
+            variant={vistaActiva === 'sinAgrupar' ? 'contained' : 'outlined'}
+          >
+            Sin Agrupar
+          </Button>
+          <Button 
+            onClick={mostrarSoloLocales}
+            variant={vistaActiva === 'soloLocales' ? 'contained' : 'outlined'}
+          >
+            Solo Locales
+          </Button>
+          <Button 
+            onClick={mostrarSoloProductos}
+            variant={vistaActiva === 'soloProductos' ? 'contained' : 'outlined'}
+          >
+            Solo Productos
+          </Button>
+        </ButtonGroup>
+      </Box>
+      <MaterialReactTable table={table} />
+    </Box>
+  );
 };
 
