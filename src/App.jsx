@@ -4,7 +4,6 @@ import './App.css'
 import { MRT_example_basic } from './MRT_example_basic'
 
 function App() {
-
   return (
     <>
       <div>

@@ -1,88 +1,89 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   MaterialReactTable,
   useMaterialReactTable,
 } from 'material-react-table';
 
-const CONFIG = {
-  meses: [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ],
-  locales: ['Sucursal Centro', 'Sucursal Norte', 'Sucursal Sur', 'Sucursal Este', 'Sucursal Oeste'],
-  productos: ['Producto A', 'Producto B', 'Producto C', 'Producto D', 'Producto E'],
-  venta: { min: 1000, max: 50000, decimales: 2 },
-  inventario: { min: -50, max: 500 },
-  crecimiento: { min: -25, max: 50, decimales: 2 },
-  colores: {
-    crecimiento: {
-      positivo: '#10b981',
-      negativo: '#ef4444', 
-      neutro: '#6b7280',   
-    },
-    inventario: {
-      positivo: '#3b82f6',
-      negativo: '#f59e0b', 
-      bajo: '#ef4444',     
-    },
-    venta: {
-      alto: '#10b981',     
-      medio: '#f59e0b',    
-      bajo: '#ef4444',      
-    },
-  },
-  umbrales: {
-    ventaAlta: 30000,
-    ventaBaja: 10000,
-    inventarioBajo: 20,
-  },
-};
 
+const CONFIG = {
+    meses: [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ],
+    locales: ['Sucursal Centro', 'Sucursal Norte', 'Sucursal Sur', 'Sucursal Este', 'Sucursal Oeste'],
+    productos: ['Producto A', 'Producto B', 'Producto C', 'Producto D', 'Producto E'],
+    venta: { min: 1000, max: 50000, decimales: 2 },
+    inventario: { min: -50, max: 500 },
+    crecimiento: { min: -25, max: 50, decimales: 2 },
+    colores: {
+      crecimiento: {
+        positivo: '#10b981',
+        negativo: '#ef4444', 
+        neutro: '#6b7280',   
+      },
+      inventario: {
+        positivo: '#3b82f6',
+        negativo: '#f59e0b', 
+        bajo: '#ef4444',     
+      },
+      venta: {
+        alto: '#10b981',     
+        medio: '#f59e0b',    
+        bajo: '#ef4444',      
+      },
+    },
+    umbrales: {
+      ventaAlta: 30000,
+      ventaBaja: 10000,
+      inventarioBajo: 20,
+    },
+};
+  
 const obtenerMesActual = () => {
-  const mesActual = new Date().getMonth();
-  return CONFIG.meses[mesActual];
+const mesActual = new Date().getMonth();
+return CONFIG.meses[mesActual];
 };
 
 const randomDecimal = (min, max, decimales = 2) => {
-  return Number((Math.random() * (max - min) + min).toFixed(decimales));
+return Number((Math.random() * (max - min) + min).toFixed(decimales));
 };
 
 const randomInt = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
 const generarDatosEjemplo = () => {
-  const datos = [];
-  CONFIG.locales.forEach((local) => {
+const datos = [];
+CONFIG.locales.forEach((local) => {
     CONFIG.productos.forEach((producto) => {
-      const venta = randomDecimal(
+    const venta = randomDecimal(
         CONFIG.venta.min,
         CONFIG.venta.max,
         CONFIG.venta.decimales
-      );
-      const inventario = randomInt(CONFIG.inventario.min, CONFIG.inventario.max);
-      const crecimiento = randomDecimal(
+    );
+    const inventario = randomInt(CONFIG.inventario.min, CONFIG.inventario.max);
+    const crecimiento = randomDecimal(
         CONFIG.crecimiento.min,
         CONFIG.crecimiento.max,
         CONFIG.crecimiento.decimales
-      );
+    );
 
-      datos.push({
+    datos.push({
         local,
         producto,
         venta,
         mes: obtenerMesActual(),
         inventario,
         crecimiento,
-      });
     });
-  });
-  return datos;
+    });
+});
+return datos;
 };
 
-const data = generarDatosEjemplo();
-
 export const MRT_example_basic = () => {
+  const [data] = useState(() => generarDatosEjemplo());
+
   const columns = useMemo(
     () => [
       {
@@ -182,16 +183,8 @@ export const MRT_example_basic = () => {
   const table = useMaterialReactTable({
     columns,
     data,
-    enableColumnFilters: true,
-    enableGlobalFilter: true,
-    enableSorting: true,
-    enablePagination: true,
-    initialState: {
-      pagination: { pageSize: 10 },
-    },
   });
 
   return <MaterialReactTable table={table} />;
 };
 
-export default MRT_example_basic;
